@@ -7,61 +7,112 @@
     <title>Go Serve</title>
     <link rel="stylesheet" href="/style.css" />
     <style>
+      body {
+        font-family: "Lucida Console", "Courier New", monospace;
+        margin: 0;
+        padding: 0;
+        background-color: black;
+        color: white;
+      }
+      main {
+        max-width: 1200px;
+        margin: auto;
+      }
+      .flex {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+      }
+      .file-box {
+      }
+      .directory-box {
+        font-size: bold;
+      }
       .directory {
-        text-decoration: underline;
+        cursor: pointer;
+      }
+      .card {
+        background-color: black;
+        color: white;
+        border-radius: 1rem;
+        border: 1px solid white;
+        padding: 1rem;
+      }
+      .card:hover {
+        color: black;
+        background-color: white;
+      }
+      a {
+        color: white;
+        text-decoration: none;
+      }
+      button {
+        padding: 0.5rem;
+        border: 1px solid white;
+        border-radius: 1rem;
+        background-color: black;
+        color: white;
         cursor: pointer;
       }
     </style>
   </head>
   <body>
-    <button onclick="backToRoot()">Root</button>
-    <label id="path">.</label>
-
-    <div id="entries"></div>
+    <main>
+      <div id="entries"></div>
+    </main>
     <script>
-      async function backToRoot() {
-        document.getElementById("path").innerText = "";
-        await updateDirEntries();
+      function toParent() {
+        currentPath = currentPath.substring(0, currentPath.lastIndexOf("/"));
+        updateDirEntries(currentPath, true);
+      }
+      // addEventListener("popstate", async (event) => {
+      //   console.log(event);
+      //   currentPath = extractPath(window.location.href);
+      //   console.log("1", currentPath);
+      //   console.log("2", event.target.location.pathname);
+      //   await updateDirEntries(currentPath, false);
+      // });
+
+      async function addToPath(name) {
+        console.log("addToPath BEFORE", currentPath);
+        currentPath = `${currentPath}/${name}`;
+        console.log("addToPath AFTER", currentPath);
+        await updateDirEntries(currentPath, true);
       }
 
-      async function updateDirEntries(subPath) {
-        if (!subPath) {
-          subPath = "";
+      async function updateDirEntries(currentPath, addToHistory) {
+        console.log("updateDirEntries: new current path:", currentPath);
+
+        const url = `/api/list/${currentPath}`;
+
+        const response = await fetch(url);
+        const text = await response.text();
+        document.getElementById("entries").innerHTML = await text;
+
+        if (addToHistory === true) {
+          window.location.search = `?path=${currentPath}`;
+          // window.history.pushState("empty", "", currentPath);
         }
-
-        const current = document.getElementById("path").innerText;
-        const wholePath = subPath ? `${current}/${subPath}` : "";
-        document.getElementById("path").innerText = wholePath;
-        console.log(wholePath);
-
-        const response = await fetch(`/api/list/${wholePath}`);
-        const entries = await response.json();
-        const div = document.getElementById("entries");
-
-        const files = entries
-          .filter((e) => !e.is_dir)
-          .map(
-            (e) => `
-            <div class="file">
-            ${e.name}
-            </div>
-        `
-          )
-          .join("");
-        const directories = entries
-          .filter((e) => e.is_dir)
-          .map(
-            (e) => `
-            <div class="directory" onclick="updateDirEntries('${e.name}')">
-            ${e.name}
-            </div>
-        `
-          )
-          .join("");
-
-        div.innerHTML = directories + files;
       }
-      backToRoot();
+
+      function extractPath(url) {
+        console.log("starting url", url);
+        const u = new URL(url);
+        const p = u.pathname.substring(1);
+        console.log("Extracted:", p);
+        console.log("From:", u.pathname);
+        return p;
+      }
+      console.log("START");
+      // let currentPath = extractPath(window.location.href);
+      console.log(window.location);
+      const params = new URLSearchParams(window.location.search);
+      currentPath = params.get("path");
+      if (!currentPath) {
+        currentPath = ".";
+      }
+
+      updateDirEntries(currentPath, false);
     </script>
   </body>
 </html>
