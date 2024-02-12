@@ -13,7 +13,7 @@ var index []byte
 func main() {
 	fs := http.FileServer(http.Dir("."))
 	http.Handle("/download/", http.StripPrefix("/download/", fs))
-	// http.HandleFunc("/", serveIndex)
+	http.HandleFunc("/", serveIndex)
 	log.Fatal(http.ListenAndServe(":8910", nil))
 }
 
