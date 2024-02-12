@@ -6,9 +6,62 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
     <title>Go Serve</title>
     <link rel="stylesheet" href="/style.css" />
+    <style>
+      .directory {
+        text-decoration: underline;
+        cursor: pointer;
+      }
+    </style>
   </head>
   <body>
-    Hi
-    <script src="/index.js"></script>
+    <button onclick="backToRoot()">Root</button>
+    <label id="path">.</label>
+
+    <div id="entries"></div>
+    <script>
+      async function backToRoot() {
+        document.getElementById("path").innerText = "";
+        await updateDirEntries();
+      }
+
+      async function updateDirEntries(subPath) {
+        if (!subPath) {
+          subPath = "";
+        }
+
+        const current = document.getElementById("path").innerText;
+        const wholePath = subPath ? `${current}/${subPath}` : "";
+        document.getElementById("path").innerText = wholePath;
+        console.log(wholePath);
+
+        const response = await fetch(`/api/list/${wholePath}`);
+        const entries = await response.json();
+        const div = document.getElementById("entries");
+
+        const files = entries
+          .filter((e) => !e.is_dir)
+          .map(
+            (e) => `
+            <div class="file">
+            ${e.name}
+            </div>
+        `
+          )
+          .join("");
+        const directories = entries
+          .filter((e) => e.is_dir)
+          .map(
+            (e) => `
+            <div class="directory" onclick="updateDirEntries('${e.name}')">
+            ${e.name}
+            </div>
+        `
+          )
+          .join("");
+
+        div.innerHTML = directories + files;
+      }
+      backToRoot();
+    </script>
   </body>
 </html>
