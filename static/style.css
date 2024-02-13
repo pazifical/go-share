@@ -1,0 +1,57 @@
+body {
+    font-family: "Lucida Console", "Courier New", monospace;
+    margin: 0;
+    padding: 0;
+    background-color: black;
+    color: white;
+}
+
+main {
+    max-width: 1200px;
+    margin: auto;
+    position: relative;
+}
+
+.flex {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.file-box {}
+
+.directory-box {
+    font-size: bold;
+}
+
+.directory {
+    cursor: pointer;
+}
+
+.card {
+    background-color: black;
+    color: white;
+    border-radius: 1rem;
+    border: 1px solid white;
+    padding: 1rem;
+    transition: 0.1s;
+}
+
+.card:hover {
+    color: black;
+    background-color: white;
+}
+
+a {
+    color: white;
+    text-decoration: none;
+}
+
+button {
+    padding: 0.5rem;
+    border: 1px solid white;
+    border-radius: 1rem;
+    background-color: black;
+    color: white;
+    cursor: pointer;
+}

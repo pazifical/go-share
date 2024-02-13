@@ -4,12 +4,18 @@ import (
 	"embed"
 	"fmt"
 	"html/template"
+	"io/fs"
 	"log"
 	"net/http"
 	"os"
 
 	_ "embed"
 )
+
+type Directory struct {
+	Name    string
+	Entries []Entry
+}
 
 type Entry struct {
 	Name      string
@@ -19,16 +25,40 @@ type Entry struct {
 
 var port = 8910
 
-//go:embed static/index.html
-var index []byte
-
-//go:embed static/data.html
-var data embed.FS
+//go:embed static
+var static embed.FS
 
 var templ *template.Template
 
+func main() {
+	server, err := createServer()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", port), server))
+}
+
+func createServer() (*http.ServeMux, error) {
+	mux := http.NewServeMux()
+
+	fileServer := http.FileServer(http.Dir("."))
+
+	staticFS, err := fs.Sub(static, "static")
+	if err != nil {
+		return nil, err
+	}
+	staticFileserver := http.FileServer(http.FS(staticFS))
+
+	mux.Handle("/", http.StripPrefix("/", staticFileserver))
+	mux.Handle("/api/download/", http.StripPrefix("/api/download/", fileServer))
+	mux.HandleFunc("/api/list/{path...}", renderEntries)
+
+	return mux, nil
+}
+
 func init() {
-	t, err := template.ParseFS(data, "static/data.html")
+	t, err := template.ParseFS(static, "static/data.html")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -48,19 +78,26 @@ func getDirEntries(directory string) ([]Entry, error) {
 			Directory: directory,
 			IsDir:     entry.IsDir(),
 		})
+
 	}
 	return files, nil
 }
 
-func main() {
-	fs := http.FileServer(http.Dir("."))
-	http.Handle("/api/download/", http.StripPrefix("/api/download/", fs))
+func GetContentType(fPath string) (string, error) {
+	f, err := os.Open(fPath)
+	if err != nil {
+		return "", err
+	}
+	defer f.Close()
 
-	http.HandleFunc("/", serveIndex)
-	http.HandleFunc("/api/list/{path...}", renderEntries)
+	buf := make([]byte, 512)
+	_, err = f.Read(buf)
+	if err != nil {
+		return "", err
+	}
 
-	fmt.Printf("Open a browser on http://localhost:%d\n", port)
-	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", port), nil))
+	return http.DetectContentType(buf), nil
+
 }
 
 func renderEntries(w http.ResponseWriter, r *http.Request) {
@@ -75,14 +112,10 @@ func renderEntries(w http.ResponseWriter, r *http.Request) {
 		entries = make([]Entry, 0)
 	}
 
-	err = templ.Execute(w, entries)
+	err = templ.Execute(w, Directory{Name: subPath, Entries: entries})
 	if err != nil {
 		log.Println(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-}
-
-func serveIndex(w http.ResponseWriter, r *http.Request) {
-	w.Write(index)
 }

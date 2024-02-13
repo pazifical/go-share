@@ -1,17 +1,20 @@
+<h2>{{.Name}}</h2>
 <h3>Directories</h3>
 <div class="directory-box flex">
   <div class="directory card" onclick="toParent()">..</div>
 
-  {{range .}} {{if .IsDir}}
+  {{range .Entries}} {{if .IsDir}}
   <div class="directory card" onclick="addToPath('{{.Name}}')">{{.Name}}</div>
 
   {{end}} {{end}}
 </div>
 <h3>Files</h3>
 <div class="file-box flex">
-  {{range .}} {{if not .IsDir }}
+  {{range .Entries}} {{if not .IsDir }}
   <a href="/api/download/{{.Directory}}/{{.Name}}" target="_blank">
-    <div class="file card">{{.Name}}</div>
+    <div class="file card">
+      {{.Name}}
+    </div>
   </a>
   {{end}} {{end}}
 </div>

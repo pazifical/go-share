@@ -1,93 +1,26 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <title>Go Serve</title>
-    <link rel="stylesheet" href="/style.css" />
-    <style>
-      body {
-        font-family: "Lucida Console", "Courier New", monospace;
-        margin: 0;
-        padding: 0;
-        background-color: black;
-        color: white;
-      }
-      main {
-        max-width: 1200px;
-        margin: auto;
-      }
-      .flex {
-        display: flex;
-        gap: 1rem;
-        flex-wrap: wrap;
-      }
-      .file-box {
-      }
-      .directory-box {
-        font-size: bold;
-      }
-      .directory {
-        cursor: pointer;
-      }
-      .card {
-        background-color: black;
-        color: white;
-        border-radius: 1rem;
-        border: 1px solid white;
-        padding: 1rem;
-      }
-      .card:hover {
-        color: black;
-        background-color: white;
-      }
-      a {
-        color: white;
-        text-decoration: none;
-      }
-      button {
-        padding: 0.5rem;
-        border: 1px solid white;
-        border-radius: 1rem;
-        background-color: black;
-        color: white;
-        cursor: pointer;
-      }
-    </style>
-  </head>
-  <body>
-    <main>
-      <div id="entries"></div>
-    </main>
-    <script>
-      function toParent() {
-        currentPath = currentPath.substring(0, currentPath.lastIndexOf("/"));
-        updateDirEntries(currentPath, true);
-      }
 
-      async function addToPath(name) {
-        currentPath = `${currentPath}/${name}`;
-        await updateDirEntries(currentPath, true);
-      }
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+  <title>Go Serve</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
 
-      async function updateDirEntries(currentPath, changePath) {
-        const response = await fetch(`/api/list/${currentPath}`);
-        const text = await response.text();
-        document.getElementById("entries").innerHTML = await text;
+<body>
+  <main>
+    <h2 id="dir"></h2>
+    <div id="entries"></div>
+    <div id="info-box">
+      <img id="preview" src="">
+    </div>
+  </main>
+  <script>
 
-        if (changePath === true) {
-          window.location.search = `?path=${currentPath}`;
-        }
-      }
+  </script>
+  <script src="/main.js"></script>
+</body>
 
-      const params = new URLSearchParams(window.location.search);
-      currentPath = params.get("path");
-      if (!currentPath) {
-        currentPath = ".";
-      }
-
-      updateDirEntries(currentPath, false);
-    </script>
-  </body>
 </html>
